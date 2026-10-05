@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Nazuaf NextDNS Control Center</title>
+  <meta name="description" content="Futuristic self-hosted NextDNS dashboard powered by Cloudflare Pages Functions.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">N</span><div><b>NAZUAF</b><small>NextDNS Control</small></div></div>
+      <div class="profile-picker">
+        <label>PROFILE</label>
+        <select id="profileSelect"></select>
+      </div>
+      <nav id="nav">
+        <button class="nav-item active" data-view="overview">⌂ <span>Overview</span></button>
+        <button class="nav-item" data-view="analytics">◈ <span>Analytics</span></button>
+        <button class="nav-item" data-view="logs">≋ <span>Live Logs</span></button>
+        <button class="nav-item" data-view="devices">▦ <span>Devices</span></button>
+        <button class="nav-item" data-view="lists">◉ <span>Allow / Deny</span></button>
+        <button class="nav-item" data-view="security">◆ <span>Security</span></button>
+        <button class="nav-item" data-view="privacy">◌ <span>Privacy</span></button>
+        <button class="nav-item" data-view="parental">◒ <span>Parental</span></button>
+        <button class="nav-item" data-view="performance">⚡ <span>Performance</span></button>
+        <button class="nav-item" data-view="settings">⚙ <span>Profile JSON</span></button>
+      </nav>
+      <div class="side-foot">
+        <span class="dot" id="statusDot"></span><span id="apiStatus">Checking API…</span>
+        <button id="refreshBtn" class="ghost">↻ Refresh</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><span class="eyebrow">NEXTDNS / CONTROL CENTER</span><h1 id="viewTitle">Overview</h1></div>
+        <div class="top-actions">
+          <span id="lastSync">—</span>
+          <button class="icon-btn" id="themeBtn" title="Toggle theme">◐</button>
+        </div>
+      </header>
+
+      <section id="appContent"></section>
+      <footer>NAZUAF • NextDNS dashboard • API key stays server-side in Cloudflare secret</footer>
+    </main>
+  </div>
+  <div id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
