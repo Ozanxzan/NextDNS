@@ -1,6 +1,5 @@
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const state={profiles:[],profile:null,view:"overview",data:{},logs:[],live:null};
-
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const fmt=n=>Number(n||0).toLocaleString("en-US");
 const pct=(a,b)=>b?Math.round(a/b*100):0;
@@ -100,8 +99,82 @@ async function renderLists(){
   $$("[data-add]").forEach(b=>b.onclick=async()=>{const type=b.dataset.add,v=$("#"+type+"Input").value.trim();if(!v)return;try{await api(`profiles/${state.profile}/${type}`,{method:"POST",body:{id:v,active:true}});toast("Domain added");renderLists()}catch(e){toast(e.message,false)}});
   $$("[data-del]").forEach(b=>b.onclick=async()=>{if(!confirm("Delete "+b.dataset.id+"?"))return;try{await api(`profiles/${state.profile}/${b.dataset.del}/${encodeURIComponent(b.dataset.id)}`,{method:"DELETE"});toast("Domain deleted");renderLists()}catch(e){toast(e.message,false)}});
 }
+
 async function renderSection(section){
   const p=await profile(), obj=p[section]||{};
+
+  if(section==="privacy"){
+    const blocklists=Array.isArray(obj.blocklists)?obj.blocklists:[];
+    const natives=Array.isArray(obj.natives)?obj.natives:[];
+    const bools=Object.entries(obj).filter(([k,v])=>typeof v==="boolean");
+
+    $("#appContent").innerHTML=`
+      <div class="privacy-dashboard">
+        <div class="card privacy-hero">
+          <div>
+            <div class="eyebrow">PRIVACY / PROTECTION</div>
+            <h2>Privacy Protection</h2>
+            <p class="muted">Control privacy and tracking protection for this NextDNS profile.</p>
+          </div>
+          <button class="btn primary" id="savePrivacy">Save changes</button>
+        </div>
+
+        <div class="grid two privacy-settings">
+          ${bools.map(([k,v])=>`
+            <label class="card privacy-toggle">
+              <div class="privacy-icon">${v?"✓":"○"}</div>
+              <div class="privacy-toggle-info">
+                <strong>${esc(k.replace(/([A-Z])/g," $1").replace(/^./,s=>s.toUpperCase()))}</strong>
+                <span class="muted">${v?"Protection enabled":"Protection disabled"}</span>
+              </div>
+              <input type="checkbox" data-key="${esc(k)}" ${v?"checked":""}>
+            </label>
+          `).join("")}
+        </div>
+
+        <div class="card privacy-blocklists">
+          <div class="section-head">
+            <div><h2>Active Blocklists</h2><p class="muted tiny">${blocklists.length} blocklists configured</p></div>
+            <span class="pill">${blocklists.length} ACTIVE</span>
+          </div>
+          <div class="privacy-list">
+            ${blocklists.length?blocklists.map(x=>`
+              <div class="privacy-list-item">
+                <div class="privacy-list-status"></div>
+                <div class="privacy-list-main">
+                  <strong>${esc(x.name||x.id||"Unknown list")}</strong>
+                  <span class="muted">${esc(x.description||"NextDNS protection list")}</span>
+                  ${x.website?`<a href="${esc(x.website)}" target="_blank" rel="noopener" class="privacy-link">${esc(x.website)}</a>`:""}
+                </div>
+                <div class="privacy-list-count"><strong>${fmt(x.entries||0)}</strong><span>entries</span></div>
+              </div>
+            `).join(""):`<div class="empty">No blocklists configured.</div>`}
+          </div>
+        </div>
+
+        <div class="card native-protection">
+          <div class="section-head">
+            <div><h2>Native Tracking Protection</h2><p class="muted tiny">Platform-specific privacy protection</p></div>
+            <span class="pill">${natives.length} PLATFORMS</span>
+          </div>
+          <div class="native-grid">
+            ${natives.length?natives.map(x=>`<div class="native-item"><span class="native-dot"></span><span>${esc(x.id||x.name||"Unknown")}</span></div>`).join(""):`<div class="empty">No native protections configured.</div>`}
+          </div>
+        </div>
+      </div>`;
+
+    $("#savePrivacy").onclick=async()=>{
+      const patch={};
+      $$("[data-key]").forEach(i=>patch[i.dataset.key]=i.checked);
+      try{
+        await api(`profiles/${state.profile}/privacy`,{method:"PATCH",body:patch});
+        toast("Privacy settings saved");
+        renderSection("privacy");
+      }catch(e){toast(e.message,false)}
+    };
+    return;
+  }
+
   const title=section==="parentalControl"?"Parental Control":section[0].toUpperCase()+section.slice(1);
   $("#appContent").innerHTML=`<div class="card"><div class="section-head"><h2>${title}</h2><button class="btn primary" id="saveSection">Save changes</button></div>
   <div class="grid two">${Object.entries(obj).map(([k,v])=>typeof v==="boolean"?`<label class="toggle"><span>${esc(k)}</span><input type="checkbox" data-key="${esc(k)}" ${v?"checked":""}></label>`:`<div class="card"><div class="stat-label">${esc(k)}</div><div class="code">${esc(JSON.stringify(v,null,2))}</div></div>`).join("")}</div></div>`;
